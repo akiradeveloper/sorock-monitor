@@ -6,7 +6,7 @@ use ratatui::widgets::{Block, Gauge};
 use ratatui::{
     crossterm::event::{self, KeyCode, KeyEventKind},
     style::Stylize,
-    widgets::{Paragraph, StatefulWidget, Widget},
+    widgets::{Borders, Paragraph, StatefulWidget, Widget},
     DefaultTerminal,
 };
 use std::time::Duration;
@@ -24,7 +24,7 @@ fn random_list(n: usize) -> Vec<Node> {
     for i in 0..n {
         nodes.push(Node {
             name: format!("Node {}", i + 1),
-            progress: rand::random::<f64>(),
+            progress: rand::random::<u16>() % 100,
         });
     }
     nodes
@@ -88,24 +88,50 @@ impl App {
 #[derive(Clone)]
 struct Node {
     name: String,
-    progress: f64,
+    progress: u16,
 }
 impl Widget for Node {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer)
     where
         Self: Sized,
     {
-        let widget = Gauge::default()
-            .block(Block::bordered().title(self.name))
+        let outer_block = Block::default().borders(Borders::ALL).title(self.name);
+
+        let inner_area = outer_block.inner(area);
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Fill(self.progress),
+                    Constraint::Fill(100 - self.progress),
+                ]
+                .as_ref(),
+            )
+            .split(inner_area);
+
+        Gauge::default()
             .gauge_style(
                 Style::default()
-                    .fg(Color::White)
+                    .fg(Color::Green)
                     .bg(Color::Black)
                     .add_modifier(Modifier::ITALIC),
             )
-            .ratio(self.progress);
+            .label("done")
+            .ratio(1.0)
+            .render(chunks[0], buf);
 
-        Widget::render(widget, area, buf);
+        Gauge::default()
+            .gauge_style(
+                Style::default()
+                    .fg(Color::Red)
+                    .bg(Color::Black)
+                    .add_modifier(Modifier::ITALIC),
+            )
+            .label("not done")
+            .ratio(1.0)
+            .render(chunks[1], buf);
+        outer_block.render(area, buf);
     }
 }
 struct NodeList {
