@@ -24,7 +24,8 @@ fn random_list(n: usize) -> Vec<Node> {
     for i in 0..n {
         nodes.push(Node {
             name: format!("Node {}", i + 1),
-            progress: rand::random::<u16>() % 100,
+            progress1: rand::random::<u16>() % 1000,
+            progress2: rand::random::<u16>() % 1000
         });
     }
     nodes
@@ -88,7 +89,8 @@ impl App {
 #[derive(Clone)]
 struct Node {
     name: String,
-    progress: u16,
+    progress1: u16,
+    progress2: u16,
 }
 impl Widget for Node {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer)
@@ -103,8 +105,8 @@ impl Widget for Node {
             .direction(Direction::Horizontal)
             .constraints(
                 [
-                    Constraint::Fill(self.progress),
-                    Constraint::Fill(100 - self.progress),
+                    Constraint::Fill(self.progress1),
+                    Constraint::Fill(self.progress2),
                 ]
                 .as_ref(),
             )
