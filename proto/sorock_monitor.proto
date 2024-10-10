@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package sorock.monitor;
+
+message Membership {
+
+}
+
+message LogMetrics {
+
+}
+
+service Monitor {
+  rpc GetMembership(google.protobuf.Empty) returns (stream Membership) {}
+  rpc GetLogMetrics(google.protobuf.Empty) returns (stream LogMetrics) {}
+}
