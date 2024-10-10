@@ -16,13 +16,13 @@ struct LogStripe {
 }
 impl LogStripe {
     pub fn from(node: &Node) -> Self {
-        let len = node.min_max.max_index - node.min_max.min_index;
+        let width = node.min_max.max_index - node.min_max.min_index;
 
-        let min_to_head = (node.head_index - node.min_max.min_index) as f64 / len as f64;
-        let min_to_snap = (node.snapshot_index - node.min_max.min_index) as f64 / len as f64;
-        let min_to_app = (node.app_index - node.min_max.min_index) as f64 / len as f64;
-        let min_to_commit = (node.commit_index - node.min_max.min_index) as f64 / len as f64;
-        let min_to_last = (node.last_index - node.min_max.min_index) as f64 / len as f64;
+        let min_to_head = (node.head_index - node.min_max.min_index) as f64 / width as f64;
+        let min_to_snap = (node.snapshot_index - node.min_max.min_index) as f64 / width as f64;
+        let min_to_app = (node.app_index - node.min_max.min_index) as f64 / width as f64;
+        let min_to_commit = (node.commit_index - node.min_max.min_index) as f64 / width as f64;
+        let min_to_last = (node.last_index - node.min_max.min_index) as f64 / width as f64;
 
         let k = 10000.0;
 

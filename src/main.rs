@@ -1,9 +1,9 @@
 use anyhow::Result;
 use http::Uri;
+use spin::RwLock;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::{io, vec};
-use spin::RwLock;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Gauge};
@@ -16,6 +16,7 @@ use ratatui::{
 use std::time::Duration;
 
 mod model;
+mod stream;
 mod ui;
 
 fn main() -> Result<()> {
@@ -60,50 +61,7 @@ impl App {
             model: Arc::new(RwLock::new(nodes)),
         }
     }
-}
-#[derive(Default)]
-struct AppState {
-    list_state: tui_widget_list::ListState,
-}
-impl StatefulWidget for &App {
-    type State = AppState;
-    fn render(
-        self,
-        area: ratatui::prelude::Rect,
-        buf: &mut ratatui::prelude::Buffer,
-        state: &mut Self::State,
-    ) where
-        Self: Sized,
-    {
-        let nodes  = {
-            let mut out = vec![];
-            let reader = &self.model.read();
 
-            let min_index = reader.nodes.values().map(|node_state| node_state.log_state.head_index).min().unwrap_or(0);
-            let max_index = reader.nodes.values().map(|node_state| node_state.log_state.last_index).max().unwrap_or(0);
-            
-            for (uri, node_state) in &reader.nodes {
-                let log_state = &node_state.log_state;
-                out.push(ui::node_list::Node {
-                    name: uri.to_string(),
-                    head_index: log_state.head_index,
-                    snapshot_index: log_state.snapshot_index,
-                    app_index: log_state.app_index,
-                    commit_index: log_state.commit_index,
-                    last_index: log_state.last_index,
-                    min_max: ui::node_list::IndexRange {
-                        min_index,
-                        max_index,
-                    },
-                });
-            }
-            out
-        };
-        let nodes_list = ui::node_list::NodeList::new(nodes);
-        StatefulWidget::render(nodes_list, area, buf, &mut state.list_state);
-    }
-}
-impl App {
     fn run(self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         let mut app_state = AppState::default();
         loop {
@@ -126,5 +84,58 @@ impl App {
                 }
             }
         }
+    }
+}
+
+#[derive(Default)]
+struct AppState {
+    list_state: tui_widget_list::ListState,
+}
+impl StatefulWidget for &App {
+    type State = AppState;
+    fn render(
+        self,
+        area: ratatui::prelude::Rect,
+        buf: &mut ratatui::prelude::Buffer,
+        state: &mut Self::State,
+    ) where
+        Self: Sized,
+    {
+        let nodes = {
+            let mut out = vec![];
+            let reader = &self.model.read();
+
+            let min_index = reader
+                .nodes
+                .values()
+                .map(|node_state| node_state.log_state.head_index)
+                .min()
+                .unwrap_or(0);
+            let max_index = reader
+                .nodes
+                .values()
+                .map(|node_state| node_state.log_state.last_index)
+                .max()
+                .unwrap_or(0);
+
+            for (uri, node_state) in &reader.nodes {
+                let log_state = &node_state.log_state;
+                out.push(ui::node_list::Node {
+                    name: uri.to_string(),
+                    head_index: log_state.head_index,
+                    snapshot_index: log_state.snapshot_index,
+                    app_index: log_state.app_index,
+                    commit_index: log_state.commit_index,
+                    last_index: log_state.last_index,
+                    min_max: ui::node_list::IndexRange {
+                        min_index,
+                        max_index,
+                    },
+                });
+            }
+            out
+        };
+        let nodes_list = ui::node_list::NodeList::new(nodes);
+        StatefulWidget::render(nodes_list, area, buf, &mut state.list_state);
     }
 }

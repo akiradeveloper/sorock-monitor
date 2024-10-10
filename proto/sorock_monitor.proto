@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
-package sorock.monitor;
+package sorock_monitor;
 
 message Membership {
 

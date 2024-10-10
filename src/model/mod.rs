@@ -1,6 +1,6 @@
-use http::Uri;
-
 use super::*;
+
+use http::Uri;
 
 #[derive(Default)]
 pub struct LogState {
