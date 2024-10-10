@@ -9,5 +9,6 @@ crossbeam = "0.8.4"
 http = "1.1.0"
 rand = "0.8.5"
 ratatui = "0.28.1"
+spin = "0.9.8"
 tokio = { version = "1.40.0", features = ["full"] }
 tui-widget-list = "0.12.2"

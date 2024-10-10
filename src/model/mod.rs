@@ -13,12 +13,12 @@ pub struct LogState {
 
 #[derive(Default)]
 pub struct NodeState {
-    log_state: LogState,
+    pub log_state: LogState,
 }
 
 #[derive(Default)]
 pub struct Nodes {
-    nodes: HashMap<Uri, NodeState>,
+    pub nodes: HashMap<Uri, NodeState>,
 }
 impl Nodes {
     pub async fn update_membership(&mut self, new_membership: HashSet<Uri>) {

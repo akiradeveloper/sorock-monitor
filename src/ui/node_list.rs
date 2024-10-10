@@ -2,22 +2,8 @@ use super::*;
 
 #[derive(Clone, Copy)]
 pub struct IndexRange {
-    min_index: u64,
-    max_index: u64,
-}
-impl IndexRange {
-    pub fn calc_from(nodes: &[Node]) -> Self {
-        let mut min_index = u64::MAX;
-        let mut max_index = 0;
-        for node in nodes {
-            min_index = min_index.min(node.head_index);
-            max_index = max_index.max(node.last_index);
-        }
-        Self {
-            min_index,
-            max_index,
-        }
-    }
+    pub min_index: u64,
+    pub max_index: u64,
 }
 
 struct LogStripe {
@@ -107,7 +93,7 @@ impl Widget for Node {
                     .bg(Color::Black)
                     .add_modifier(Modifier::ITALIC),
             )
-            .label("app")
+            .label("applied")
             .ratio(1.0)
             .render(chunks[2], buf);
 
@@ -161,7 +147,7 @@ impl StatefulWidget for NodeList {
             let idx = ctx.index;
             let mut node = self.nodes[idx].clone();
             node.name = if selected {
-                format!("[{}]", node.name)
+                format!("> {}", node.name)
             } else {
                 node.name
             };
