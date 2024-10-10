@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Clone, Copy)]
 pub struct IndexRange {
     min_index: u64,
     max_index: u64,
@@ -50,16 +51,18 @@ impl LogStripe {
     }
 }
 
+#[derive(Clone)]
 pub struct Node {
     pub name: String,
+
     pub head_index: u64,
     pub snapshot_index: u64,
     pub app_index: u64,
     pub commit_index: u64,
     pub last_index: u64,
+
     pub min_max: IndexRange,
 }
-
 impl Widget for Node {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer)
     where
@@ -134,8 +137,13 @@ impl Widget for Node {
     }
 }
 
-struct NodeList {
+pub struct NodeList {
     nodes: Vec<Node>,
+}
+impl NodeList {
+    pub fn new(nodes: Vec<Node>) -> Self {
+        Self { nodes }
+    }
 }
 impl StatefulWidget for NodeList {
     type State = tui_widget_list::ListState;
@@ -153,7 +161,7 @@ impl StatefulWidget for NodeList {
             let idx = ctx.index;
             let mut node = self.nodes[idx].clone();
             node.name = if selected {
-                format!("> {}", node.name)
+                format!("[{}]", node.name)
             } else {
                 node.name
             };

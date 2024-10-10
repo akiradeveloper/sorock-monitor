@@ -1,4 +1,4 @@
-use http::uri;
+use http::Uri;
 
 use super::*;
 
