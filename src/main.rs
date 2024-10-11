@@ -1,5 +1,4 @@
 use anyhow::Result;
-use http::Uri;
 use spin::RwLock;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -9,14 +8,13 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Gauge};
 use ratatui::{
     crossterm::event::{self, KeyCode, KeyEventKind},
-    style::Stylize,
-    widgets::{Borders, Paragraph, StatefulWidget, Widget},
+    widgets::{Borders, StatefulWidget, Widget},
     DefaultTerminal,
 };
 use std::time::Duration;
+use tonic::transport::{Uri, Channel};
 
 mod model;
-mod stream;
 mod ui;
 
 fn main() -> Result<()> {
@@ -28,37 +26,12 @@ fn main() -> Result<()> {
 }
 
 struct App {
-    model: Arc<RwLock<model::Nodes>>,
+    model: model::Model,
 }
 impl App {
     pub fn test() -> Self {
-        let mut nodes = model::Nodes::default();
-        nodes.nodes.insert(
-            Uri::from_static("http://unko:3000"),
-            model::NodeState {
-                log_state: model::LogState {
-                    head_index: 100,
-                    snapshot_index: 110,
-                    app_index: 140,
-                    commit_index: 160,
-                    last_index: 165,
-                },
-            },
-        );
-        nodes.nodes.insert(
-            Uri::from_static("http://kuso:3000"),
-            model::NodeState {
-                log_state: model::LogState {
-                    head_index: 125,
-                    snapshot_index: 130,
-                    app_index: 140,
-                    commit_index: 165,
-                    last_index: 180,
-                },
-            },
-        );
         Self {
-            model: Arc::new(RwLock::new(nodes)),
+            model: model::Model::test()
         }
     }
 
@@ -103,7 +76,7 @@ impl StatefulWidget for &App {
     {
         let nodes = {
             let mut out = vec![];
-            let reader = &self.model.read();
+            let reader = &self.model.nodes.read();
 
             let min_index = reader
                 .nodes

@@ -1,6 +1,6 @@
 use super::*;
 
-use http::Uri;
+mod stream;
 
 #[derive(Default)]
 pub struct LogState {
@@ -33,6 +33,46 @@ impl Nodes {
         }
         for uri in new_membership {
             self.nodes.entry(uri).or_default();
+        }
+    }
+}
+
+pub struct Model {
+    pub nodes: Arc<RwLock<Nodes>>,
+}
+impl Model {
+    pub fn new() -> Self {
+        todo!()
+    }
+
+    pub fn test() -> Self {
+        let mut nodes = Nodes::default();
+        nodes.nodes.insert(
+            Uri::from_static("http://unko:3000"),
+            NodeState {
+                log_state: model::LogState {
+                    head_index: 100,
+                    snapshot_index: 110,
+                    app_index: 140,
+                    commit_index: 160,
+                    last_index: 165,
+                },
+            },
+        );
+        nodes.nodes.insert(
+            Uri::from_static("http://kuso:3000"),
+            NodeState {
+                log_state: model::LogState {
+                    head_index: 125,
+                    snapshot_index: 130,
+                    app_index: 140,
+                    commit_index: 165,
+                    last_index: 180,
+                },
+            },
+        );
+        Self {
+            nodes: Arc::new(RwLock::new(nodes)),
         }
     }
 }
