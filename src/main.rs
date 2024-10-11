@@ -1,6 +1,6 @@
 use anyhow::Result;
 use spin::RwLock;
-use std::collections::{HashMap, HashSet, BTreeMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use std::{io, vec};
 
@@ -12,7 +12,7 @@ use ratatui::{
     DefaultTerminal,
 };
 use std::time::Duration;
-use tonic::transport::{Uri, Channel};
+use tonic::transport::{Channel, Uri};
 
 mod model;
 mod ui;
@@ -31,7 +31,7 @@ struct App {
 impl App {
     pub fn test() -> Self {
         Self {
-            model: model::Model::test()
+            model: model::Model::test(),
         }
     }
 
@@ -106,7 +106,8 @@ impl StatefulWidget for &App {
                     },
                 });
             }
-            out.sort_by_key(|node| node.name.clone());
+            out.sort_by_key(|node| node.commit_index);
+            out.reverse();
             out
         };
         let nodes_list = ui::node_list::NodeList::new(nodes);

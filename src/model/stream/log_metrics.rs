@@ -8,7 +8,7 @@ impl LogMetrics {
         todo!()
     }
 
-    pub async fn consume(&mut self, ) -> Result<()>{
+    pub async fn consume(&mut self) -> Result<()> {
         let mut st = self.conn.get_log_metrics(()).await?.into_inner();
         while let Some(metric) = st.message().await? {
             println!("{:?}", metric);

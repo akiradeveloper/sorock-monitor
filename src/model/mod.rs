@@ -44,9 +44,7 @@ impl Model {
     pub fn new() -> Self {
         let nodes = Arc::new(RwLock::new(Nodes::default()));
         // membership変更のストリーム初期化
-        Self {
-            nodes,
-        }
+        Self { nodes }
     }
 
     pub fn test() -> Self {
