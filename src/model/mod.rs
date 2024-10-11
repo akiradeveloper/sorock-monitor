@@ -42,7 +42,11 @@ pub struct Model {
 }
 impl Model {
     pub fn new() -> Self {
-        todo!()
+        let nodes = Arc::new(RwLock::new(Nodes::default()));
+        // membership変更のストリーム初期化
+        Self {
+            nodes,
+        }
     }
 
     pub fn test() -> Self {

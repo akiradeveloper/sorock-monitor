@@ -1,6 +1,6 @@
 use anyhow::Result;
 use spin::RwLock;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, BTreeMap};
 use std::sync::Arc;
 use std::{io, vec};
 
@@ -106,6 +106,7 @@ impl StatefulWidget for &App {
                     },
                 });
             }
+            out.sort_by_key(|node| node.name.clone());
             out
         };
         let nodes_list = ui::node_list::NodeList::new(nodes);
