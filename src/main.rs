@@ -12,7 +12,7 @@ use ratatui::{
     DefaultTerminal,
 };
 use std::time::Duration;
-use tonic::transport::{Channel, Uri};
+use tonic::transport::{Channel, Endpoint, Uri};
 
 mod model;
 mod ui;
@@ -30,7 +30,7 @@ struct App {
     model: model::Model,
 }
 impl App {
-    pub async fn connect(addr: Uri, shard_id: u32) -> Self {
+    pub fn connect(addr: Uri, shard_id: u32) -> Self {
         Self {
             model: model::Model::new(addr, shard_id),
         }
