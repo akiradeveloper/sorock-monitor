@@ -17,7 +17,8 @@ use tonic::transport::{Channel, Uri};
 mod model;
 mod ui;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let mut terminal = ratatui::init();
     let app_result = App::test().run(&mut terminal)?;
     terminal.clear()?;
@@ -29,6 +30,12 @@ struct App {
     model: model::Model,
 }
 impl App {
+    pub async fn connect(addr: Uri, shard_id: u32) -> Self {
+        Self {
+            model: model::Model::new(addr, shard_id),
+        }
+    }
+
     pub fn test() -> Self {
         Self {
             model: model::Model::test(),

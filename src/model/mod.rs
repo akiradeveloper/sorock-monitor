@@ -41,9 +41,17 @@ pub struct Model {
     pub nodes: Arc<RwLock<Nodes>>,
 }
 impl Model {
-    pub fn new() -> Self {
+    pub fn new(addr: Uri, shard_id: u32) -> Self {
         let nodes = Arc::new(RwLock::new(Nodes::default()));
-        // membership変更のストリーム初期化
+
+        tokio::spawn({
+            let nodes = nodes.clone();
+            async move {
+                let mut membership = stream::Membership::connect(addr).await.unwrap();
+                membership.consume(nodes.clone()).await;
+            }
+        });
+
         Self { nodes }
     }
 
