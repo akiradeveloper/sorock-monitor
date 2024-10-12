@@ -5,6 +5,7 @@ use std::os::unix::net::SocketAddr;
 use std::sync::Arc;
 use std::{io, vec};
 
+use clap::Parser;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Gauge};
 use ratatui::{
@@ -23,16 +24,38 @@ mod proto {
     tonic::include_proto!("sorock_monitor");
 }
 
+#[derive(Parser)]
+enum SubCommand {
+    Connect { addr: Uri, shard_id: u32 },
+    Test { number: u8 },
+}
+
+#[derive(Parser)]
+struct Args {
+    #[clap(subcommand)]
+    subcommand: SubCommand,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut terminal = ratatui::init();
+    let args = Args::parse();
 
-    mock::launch_mock_server();
-    std::thread::sleep(Duration::from_secs(1));
-    let app_result = App::connect("http://localhost:50051".parse()?, 0).run(&mut terminal)?;
-    // let app_result = App::test().run(&mut terminal)?;
+    let model = match args.subcommand {
+        SubCommand::Connect { addr, shard_id } => model::Model::connect(addr, shard_id),
+        SubCommand::Test { number: 0 } => model::Model::test(),
+        SubCommand::Test { number: 1 } => {
+            mock::launch_mock_server();
+            std::thread::sleep(Duration::from_secs(1));
+            model::Model::connect("http://localhost:50051".parse()?, 0)
+        }
+        _ => unreachable!(),
+    };
+
+    let mut terminal = ratatui::init();
+    let app_result = App::new(model).run(&mut terminal)?;
     terminal.clear()?;
     ratatui::restore();
+
     Ok(app_result)
 }
 
@@ -40,9 +63,13 @@ struct App {
     model: model::Model,
 }
 impl App {
+    pub fn new(model: model::Model) -> Self {
+        Self { model }
+    }
+
     pub fn connect(addr: Uri, shard_id: u32) -> Self {
         Self {
-            model: model::Model::new(addr, shard_id),
+            model: model::Model::connect(addr, shard_id),
         }
     }
 

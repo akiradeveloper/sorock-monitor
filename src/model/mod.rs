@@ -50,7 +50,7 @@ pub struct Model {
     pub nodes: Arc<RwLock<Nodes>>,
 }
 impl Model {
-    pub fn new(addr: Uri, shard_id: u32) -> Self {
+    pub fn connect(addr: Uri, shard_id: u32) -> Self {
         let data = Arc::new(RwLock::new(Nodes::default()));
 
         tokio::spawn({
