@@ -1,12 +1,12 @@
-mod proto {
-    tonic::include_proto!("sorock_monitor");
-}
-use proto::*;
-
 use futures::stream::Stream;
 use std::time::Instant;
 use std::{pin::Pin, time::Duration};
 use tonic::transport::{Server, Uri};
+
+mod proto {
+    tonic::include_proto!("sorock_monitor");
+}
+use proto::*;
 
 pub struct App {
     url: Uri,
@@ -44,17 +44,17 @@ impl proto::monitor_server::Monitor for App {
             loop {
                 tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 let x = Instant::now().duration_since(start_time).as_secs();
-                let pow = |x: u64| {
+                let f = |x: u64| {
                     let a = f64::powf(x as f64, 2.);
                     let b = f64::log(10.0, x as f64);
                     (a * b) as u64
                 };
                 let metrics = LogMetrics {
-                    head_index: pow(x),
-                    snap_index: pow(x+1),
-                    app_index: pow(x+2),
-                    commit_index: pow(x+3),
-                    last_index: pow(x+4),
+                    head_index: f(x),
+                    snap_index: f(x+1),
+                    app_index: f(x+2),
+                    commit_index: f(x+3),
+                    last_index: f(x+4),
                 };
                 yield metrics
             }
@@ -63,7 +63,7 @@ impl proto::monitor_server::Monitor for App {
     }
 }
 
-pub fn launch_mock_server() -> Uri {
+pub fn launch_mock_server() -> (Uri, u32) {
     let addr: Uri = "http://localhost:50051".parse().unwrap();
     tokio::spawn({
         let addr = addr.clone();
@@ -78,5 +78,5 @@ pub fn launch_mock_server() -> Uri {
         }
     });
     std::thread::sleep(Duration::from_secs(1));
-    addr
+    (addr, 0)
 }

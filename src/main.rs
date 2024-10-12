@@ -1,7 +1,6 @@
 use anyhow::Result;
 use spin::RwLock;
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::os::unix::net::SocketAddr;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::{io, vec};
 
@@ -14,7 +13,7 @@ use ratatui::{
     DefaultTerminal,
 };
 use std::time::Duration;
-use tonic::transport::{Channel, Endpoint, Server, Uri};
+use tonic::transport::{Channel, Endpoint, Uri};
 
 mod mock;
 mod model;
@@ -25,27 +24,29 @@ mod proto {
 }
 
 #[derive(Parser)]
-enum SubCommand {
+enum Sub {
+    #[clap(about = "Start monitoring the cluster by connecting to a node.")]
     Connect { addr: Uri, shard_id: u32 },
+    #[clap(about = "Embedded test. 0 -> Static data, 1 -> Mock server")]
     Test { number: u8 },
 }
 
 #[derive(Parser)]
 struct Args {
     #[clap(subcommand)]
-    subcommand: SubCommand,
+    sub: Sub,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    let model = match args.subcommand {
-        SubCommand::Connect { addr, shard_id } => model::Model::connect(addr, shard_id),
-        SubCommand::Test { number: 0 } => model::Model::test(),
-        SubCommand::Test { number: 1 } => {
-            let url = mock::launch_mock_server();
-            model::Model::connect(url, 0)
+    let model = match args.sub {
+        Sub::Connect { addr, shard_id } => model::Model::connect(addr, shard_id),
+        Sub::Test { number: 0 } => model::Model::test(),
+        Sub::Test { number: 1 } => {
+            let (url, shard_id) = mock::launch_mock_server();
+            model::Model::connect(url, shard_id)
         }
         _ => unreachable!(),
     };
