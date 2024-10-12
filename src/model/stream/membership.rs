@@ -15,6 +15,11 @@ impl Membership {
         loop {
             let new_membership = {
                 let mut out = HashSet::new();
+                let mem = self.conn.get_membership(()).await.unwrap().into_inner();
+                for mem in mem.members {
+                    let url = Uri::from_maybe_shared(mem).unwrap();
+                    out.insert(url);
+                }
                 out
             };
             let mut nodes = nodes.write();

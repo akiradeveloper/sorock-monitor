@@ -11,9 +11,18 @@ pub struct LogState {
     pub last_index: u64,
 }
 
+use tokio::task::AbortHandle;
+struct DropHandle(AbortHandle);
+impl Drop for DropHandle {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
 #[derive(Default)]
 pub struct NodeState {
     pub log_state: LogState,
+    drop_log_metrics_stream: Option<DropHandle>,
 }
 
 #[derive(Default)]
@@ -32,7 +41,7 @@ impl Nodes {
             self.nodes.remove(&uri);
         }
         for uri in new_membership {
-            self.nodes.entry(uri).or_default();
+            self.nodes.entry(uri.clone()).or_default();
         }
     }
 }
@@ -42,17 +51,26 @@ pub struct Model {
 }
 impl Model {
     pub fn new(addr: Uri, shard_id: u32) -> Self {
-        let nodes = Arc::new(RwLock::new(Nodes::default()));
+        let data = Arc::new(RwLock::new(Nodes::default()));
 
         tokio::spawn({
-            let nodes = nodes.clone();
+            let data = data.clone();
             async move {
                 let mut membership = stream::Membership::connect(addr).await.unwrap();
-                membership.consume(nodes.clone()).await;
+                membership.consume(data.clone()).await;
             }
         });
 
-        Self { nodes }
+        tokio::spawn({
+            let data = data.clone();
+            async move {
+                loop {
+                    stream::log_metrics::dispatch(data.clone(), shard_id);
+                }
+            }
+        });
+
+        Self { nodes: data }
     }
 
     pub fn test() -> Self {
@@ -67,6 +85,7 @@ impl Model {
                     commit_index: 160,
                     last_index: 165,
                 },
+                drop_log_metrics_stream: None,
             },
         );
         nodes.nodes.insert(
@@ -79,6 +98,7 @@ impl Model {
                     commit_index: 165,
                     last_index: 180,
                 },
+                drop_log_metrics_stream: None,
             },
         );
         Self {
