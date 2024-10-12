@@ -36,23 +36,3 @@ impl LogMetrics {
         Ok(())
     }
 }
-
-pub fn dispatch(data: Arc<RwLock<Nodes>>, shard_id: u32) {
-    let mut nodes = data.write();
-    for (uri, state) in &mut nodes.nodes {
-        if state.drop_log_metrics_stream.is_none() {
-            let hdl = tokio::spawn({
-                let uri = uri.clone();
-                let data = data.clone();
-                async move {
-                    let mut stream = stream::LogMetrics::connect(uri, shard_id);
-                    loop {
-                        stream.consume(data.clone()).await.unwrap();
-                    }
-                }
-            })
-            .abort_handle();
-            state.drop_log_metrics_stream = Some(DropHandle(hdl));
-        }
-    }
-}

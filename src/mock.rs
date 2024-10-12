@@ -63,16 +63,20 @@ impl proto::monitor_server::Monitor for App {
     }
 }
 
-pub fn launch_mock_server() {
-    tokio::spawn(async move {
-        let addr: Uri = "http://localhost:50051".parse().unwrap();
-        let app = App::new(addr);
-        let sock = "0.0.0.0:50051".parse().unwrap();
-        Server::builder()
-            .add_service(proto::monitor_server::MonitorServer::new(app))
-            .serve(sock)
-            .await
-            .unwrap();
+pub fn launch_mock_server() -> Uri {
+    let addr: Uri = "http://localhost:50051".parse().unwrap();
+    tokio::spawn({
+        let addr = addr.clone();
+        async move {
+            let app = App::new(addr);
+            let sock = "0.0.0.0:50051".parse().unwrap();
+            Server::builder()
+                .add_service(proto::monitor_server::MonitorServer::new(app))
+                .serve(sock)
+                .await
+                .unwrap();
+        }
     });
     std::thread::sleep(Duration::from_secs(1));
+    addr
 }

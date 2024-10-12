@@ -44,8 +44,8 @@ async fn main() -> Result<()> {
         SubCommand::Connect { addr, shard_id } => model::Model::connect(addr, shard_id),
         SubCommand::Test { number: 0 } => model::Model::test(),
         SubCommand::Test { number: 1 } => {
-            mock::launch_mock_server();
-            model::Model::connect("http://localhost:50051".parse()?, 0)
+            let url = mock::launch_mock_server();
+            model::Model::connect(url, 0)
         }
         _ => unreachable!(),
     };
