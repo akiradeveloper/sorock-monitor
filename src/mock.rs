@@ -6,9 +6,9 @@ use proto::*;
 use futures::stream::Stream;
 use std::pin::Pin;
 use std::time::Instant;
-use tonic::transport::Uri;
+use tonic::transport::{Server, Uri};
 
-struct App {
+pub struct App {
     url: Uri,
     start_time: Instant,
 }
@@ -42,8 +42,11 @@ impl proto::monitor_server::Monitor for App {
         let start_time = self.start_time;
         let st = async_stream::try_stream! {
             loop {
+                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 let x = Instant::now().duration_since(start_time).as_secs();
-                let pow = |x: u64| {x*x};
+                let pow = |x: u64| {
+                    x*x
+                };
                 let metrics = LogMetrics {
                     head_index: pow(x),
                     snap_index: pow(x+1),
@@ -56,4 +59,17 @@ impl proto::monitor_server::Monitor for App {
         };
         Ok(tonic::Response::new(Box::pin(st)))
     }
+}
+
+pub fn launch_mock_server() {
+    tokio::spawn(async move {
+        let addr: Uri = "http://localhost:50051".parse().unwrap();
+        let app = App::new(addr);
+        let sock = "0.0.0.0:50051".parse().unwrap();
+        Server::builder()
+            .add_service(proto::monitor_server::MonitorServer::new(app))
+            .serve(sock)
+            .await
+            .unwrap();
+    });
 }

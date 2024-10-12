@@ -1,6 +1,7 @@
 use anyhow::Result;
 use spin::RwLock;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::os::unix::net::SocketAddr;
 use std::sync::Arc;
 use std::{io, vec};
 
@@ -12,16 +13,24 @@ use ratatui::{
     DefaultTerminal,
 };
 use std::time::Duration;
-use tonic::transport::{Channel, Endpoint, Uri};
+use tonic::transport::{Channel, Endpoint, Server, Uri};
 
 mod mock;
 mod model;
 mod ui;
 
+mod proto {
+    tonic::include_proto!("sorock_monitor");
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut terminal = ratatui::init();
-    let app_result = App::test().run(&mut terminal)?;
+
+    mock::launch_mock_server();
+    std::thread::sleep(Duration::from_secs(1));
+    let app_result = App::connect("http://localhost:50051".parse()?, 0).run(&mut terminal)?;
+    // let app_result = App::test().run(&mut terminal)?;
     terminal.clear()?;
     ratatui::restore();
     Ok(app_result)

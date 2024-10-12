@@ -59,6 +59,7 @@ impl Model {
                 let mut membership = stream::Membership::connect(addr).await.unwrap();
                 loop {
                     membership.consume(data.clone()).await.ok();
+                    tokio::time::sleep(Duration::from_secs(5)).await;
                 }
             }
         });
@@ -68,6 +69,7 @@ impl Model {
             async move {
                 loop {
                     stream::log_metrics::dispatch(data.clone(), shard_id);
+                    tokio::time::sleep(Duration::from_secs(5)).await;
                 }
             }
         });
