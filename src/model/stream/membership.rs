@@ -16,7 +16,11 @@ impl Membership {
     pub async fn consume(&mut self, nodes: Arc<RwLock<Nodes>>) -> Result<()> {
         let new_membership = {
             let mut out = HashSet::new();
-            let mem = self.conn.get_membership(proto::Shard{ id: self.shard_id }).await?.into_inner();
+            let mem = self
+                .conn
+                .get_membership(proto::Shard { id: self.shard_id })
+                .await?
+                .into_inner();
             for mem in mem.members {
                 let url = Uri::from_maybe_shared(mem).unwrap();
                 out.insert(url);

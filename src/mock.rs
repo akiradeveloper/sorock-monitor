@@ -4,8 +4,8 @@ mod proto {
 use proto::*;
 
 use futures::stream::Stream;
-use std::{pin::Pin, time::Duration};
 use std::time::Instant;
+use std::{pin::Pin, time::Duration};
 use tonic::transport::{Server, Uri};
 
 pub struct App {

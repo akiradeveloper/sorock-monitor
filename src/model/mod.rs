@@ -105,6 +105,19 @@ impl Model {
                 drop_log_metrics_stream: None,
             },
         );
+        nodes.nodes.insert(
+            Uri::from_static("http://fuck:3000"),
+            NodeState {
+                log_state: model::LogState {
+                    head_index: 80,
+                    snapshot_index: 130,
+                    app_index: 135,
+                    commit_index: 168,
+                    last_index: 174,
+                },
+                drop_log_metrics_stream: None,
+            },
+        );
         Self {
             nodes: Arc::new(RwLock::new(nodes)),
         }
