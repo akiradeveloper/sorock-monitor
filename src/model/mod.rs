@@ -57,7 +57,9 @@ impl Model {
             let data = data.clone();
             async move {
                 let mut membership = stream::Membership::connect(addr).await.unwrap();
-                membership.consume(data.clone()).await;
+                loop {
+                    membership.consume(data.clone()).await.ok();
+                }
             }
         });
 

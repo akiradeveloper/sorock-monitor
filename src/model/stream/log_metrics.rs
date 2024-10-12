@@ -7,7 +7,13 @@ pub struct LogMetrics {
 }
 impl LogMetrics {
     pub fn connect(url: Uri, shard_id: u32) -> Self {
-        todo!()
+        let endpoint = Endpoint::new(url.clone()).unwrap();
+        let chan = endpoint.connect_lazy();
+        Self {
+            url,
+            shard_id,
+            conn: proto::monitor_client::MonitorClient::new(chan),
+        }
     }
     pub async fn consume(&mut self, data: Arc<RwLock<Nodes>>) -> Result<()> {
         let mut st = self.conn.get_log_metrics(()).await?.into_inner();
@@ -36,7 +42,9 @@ pub fn dispatch(data: Arc<RwLock<Nodes>>, shard_id: u32) {
                 let data = data.clone();
                 async move {
                     let mut stream = stream::LogMetrics::connect(uri, shard_id);
-                    stream.consume(data).await.unwrap();
+                    loop {
+                        stream.consume(data.clone()).await.unwrap();
+                    }
                 }
             })
             .abort_handle();
