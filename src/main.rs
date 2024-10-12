@@ -14,6 +14,7 @@ use ratatui::{
 use std::time::Duration;
 use tonic::transport::{Channel, Endpoint, Uri};
 
+mod mock;
 mod model;
 mod ui;
 
