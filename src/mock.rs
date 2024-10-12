@@ -45,7 +45,9 @@ impl proto::monitor_server::Monitor for App {
                 tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 let x = Instant::now().duration_since(start_time).as_secs();
                 let pow = |x: u64| {
-                    x*x
+                    let a = f64::powf(x as f64, 2.);
+                    let b = f64::log(10.0, x as f64);
+                    (a * b) as u64
                 };
                 let metrics = LogMetrics {
                     head_index: pow(x),
