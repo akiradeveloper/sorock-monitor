@@ -45,7 +45,6 @@ async fn main() -> Result<()> {
         SubCommand::Test { number: 0 } => model::Model::test(),
         SubCommand::Test { number: 1 } => {
             mock::launch_mock_server();
-            std::thread::sleep(Duration::from_secs(1));
             model::Model::connect("http://localhost:50051".parse()?, 0)
         }
         _ => unreachable!(),
@@ -65,18 +64,6 @@ struct App {
 impl App {
     pub fn new(model: model::Model) -> Self {
         Self { model }
-    }
-
-    pub fn connect(addr: Uri, shard_id: u32) -> Self {
-        Self {
-            model: model::Model::connect(addr, shard_id),
-        }
-    }
-
-    pub fn test() -> Self {
-        Self {
-            model: model::Model::test(),
-        }
     }
 
     fn run(self, terminal: &mut DefaultTerminal) -> io::Result<()> {

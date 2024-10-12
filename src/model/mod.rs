@@ -56,7 +56,7 @@ impl Model {
         tokio::spawn({
             let data = data.clone();
             async move {
-                let mut membership = stream::Membership::connect(addr).await.unwrap();
+                let mut membership = stream::Membership::connect(addr, shard_id).await.unwrap();
                 loop {
                     membership.consume(data.clone()).await.ok();
                     tokio::time::sleep(Duration::from_secs(5)).await;

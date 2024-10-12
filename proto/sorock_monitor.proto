@@ -4,6 +4,10 @@ import "google/protobuf/empty.proto";
 
 package sorock_monitor;
 
+message Shard {
+  uint32 id = 1;
+}
+
 message Membership {
   repeated string members = 1;
 }
@@ -17,6 +21,6 @@ message LogMetrics {
 }
 
 service Monitor {
-  rpc GetMembership(google.protobuf.Empty) returns (Membership) {}
-  rpc GetLogMetrics(google.protobuf.Empty) returns (stream LogMetrics) {}
+  rpc GetMembership(Shard) returns (Membership) {}
+  rpc GetLogMetrics(Shard) returns (stream LogMetrics) {}
 }

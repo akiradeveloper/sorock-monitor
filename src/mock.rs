@@ -4,7 +4,7 @@ mod proto {
 use proto::*;
 
 use futures::stream::Stream;
-use std::pin::Pin;
+use std::{pin::Pin, time::Duration};
 use std::time::Instant;
 use tonic::transport::{Server, Uri};
 
@@ -24,7 +24,7 @@ impl App {
 impl proto::monitor_server::Monitor for App {
     async fn get_membership(
         &self,
-        _: tonic::Request<()>,
+        _: tonic::Request<Shard>,
     ) -> std::result::Result<tonic::Response<Membership>, tonic::Status> {
         let out = Membership {
             members: vec![self.url.clone().to_string()],
@@ -37,7 +37,7 @@ impl proto::monitor_server::Monitor for App {
 
     async fn get_log_metrics(
         &self,
-        _: tonic::Request<()>,
+        _: tonic::Request<Shard>,
     ) -> std::result::Result<tonic::Response<Self::GetLogMetricsStream>, tonic::Status> {
         let start_time = self.start_time;
         let st = async_stream::try_stream! {
@@ -72,4 +72,5 @@ pub fn launch_mock_server() {
             .await
             .unwrap();
     });
+    std::thread::sleep(Duration::from_secs(1));
 }

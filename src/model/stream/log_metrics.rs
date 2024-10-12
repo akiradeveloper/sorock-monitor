@@ -16,7 +16,7 @@ impl LogMetrics {
         }
     }
     pub async fn consume(&mut self, data: Arc<RwLock<Nodes>>) -> Result<()> {
-        let mut st = self.conn.get_log_metrics(()).await?.into_inner();
+        let mut st = self.conn.get_log_metrics(proto::Shard { id: self.shard_id }).await?.into_inner();
         while let Some(metric) = st.message().await? {
             if let Some(state) = data.write().nodes.get_mut(&self.url) {
                 let new_state = LogState {
