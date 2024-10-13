@@ -19,22 +19,35 @@ impl Widget for ProgressChart {
     where
         Self: Sized,
     {
-        let lo_v = *self.data.values().min().unwrap_or(&0);
-        let hi_v = *self.data.values().max().unwrap_or(&0);
-
-        let dataseq: Vec<(f64, f64)> = {
-            let mut out = vec![];
+        let (dataseq, hi_v) = {
+            let mut data = vec![];
             for (&t, &v) in &self.data {
-                let x = self.to_relative_time(t) as f64;
-                let y = v as f64;
-                out.push((x, y));
+                let x = self.to_relative_time(t);
+                let y = v;
+                data.push((x, y));
             }
-            out
+
+            let n = data.len();
+            let mut hi_v = 0;
+            let mut out = vec![];
+            for j in 1..n {
+                let i = j - 1;
+                let (ti, xi) = data[i];
+                let (tj, xj) = data[j];
+                let v = xj - xi;
+                if v > hi_v {
+                    hi_v = v;
+                }
+                out.push((tj as f64, v as f64));
+            }
+            (out, hi_v)
         };
+
         let dataset = Dataset::default()
-            .marker(Marker::Braille)
+            // .marker(Marker::Braille)
+            .marker(symbols::Marker::HalfBlock)
             .style(Style::default().fg(Color::Yellow))
-            .graph_type(GraphType::Line)
+            .graph_type(GraphType::Bar)
             .data(&dataseq);
 
         let x_axis = {
@@ -48,9 +61,9 @@ impl Widget for ProgressChart {
         };
         let y_axis = Axis::default()
             .style(Style::default().fg(Color::Gray))
-            .title("Commit Index")
-            .bounds([lo_v as f64, hi_v as f64])
-            .labels([lo_v.to_string(), hi_v.to_string()]);
+            .title("Commit Speed")
+            .bounds([0., hi_v as f64])
+            .labels(["0".to_string(), hi_v.to_string()]);
         Chart::new(vec![dataset])
             .block(
                 Block::default()

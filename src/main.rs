@@ -115,7 +115,7 @@ impl StatefulWidget for &App {
 
         let progress_chart = {
             let end = Instant::now();
-            let start = end - Duration::from_secs(60);
+            let start = end - Duration::from_secs(120);
             let data = self.model.progress_log.read().get_range(start, end);
             ui::progress_chart::ProgressChart::new(data, start, end)
         };
