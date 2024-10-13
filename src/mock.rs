@@ -44,6 +44,8 @@ impl proto::monitor_server::Monitor for App {
             loop {
                 tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 let x = Instant::now().duration_since(start_time).as_secs();
+                // f(x) = x^2 * log(x)
+                // is a monotonically increasing function
                 let f = |x: u64| {
                     let a = f64::powf(x as f64, 2.);
                     let b = f64::log(10.0, x as f64);

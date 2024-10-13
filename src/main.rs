@@ -1,6 +1,6 @@
 use anyhow::Result;
 use spin::RwLock;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use std::{io, vec};
 
@@ -9,10 +9,11 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Gauge};
 use ratatui::{
     crossterm::event::{self, KeyCode, KeyEventKind},
-    widgets::{Borders, StatefulWidget, Widget},
+    symbols::Marker,
+    widgets::{Borders, Chart, Dataset, StatefulWidget, Widget},
     DefaultTerminal,
 };
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tonic::transport::{Channel, Endpoint, Uri};
 
 mod mock;
@@ -106,6 +107,12 @@ impl StatefulWidget for &App {
     ) where
         Self: Sized,
     {
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(1)
+            .constraints([Constraint::Length(8), Constraint::Min(0)].as_ref())
+            .split(area);
+
         let nodes = {
             let mut out = vec![];
             let reader = &self.model.nodes.read();
@@ -143,6 +150,6 @@ impl StatefulWidget for &App {
             out
         };
         let nodes_list = ui::node_list::NodeList::new(nodes);
-        StatefulWidget::render(nodes_list, area, buf, &mut state.list_state);
+        StatefulWidget::render(nodes_list, chunks[1], buf, &mut state.list_state);
     }
 }
