@@ -12,32 +12,44 @@ pub struct Model {
 }
 impl Model {
     pub fn connect(addr: Uri, shard_id: u32) -> Self {
-        let data = Arc::new(RwLock::new(Nodes::default()));
+        let nodes = Arc::new(RwLock::new(Nodes::default()));
+        let progress_log = Arc::new(RwLock::new(ProgressLog::new()));
 
         tokio::spawn({
-            let data = data.clone();
+            let nodes = nodes.clone();
             async move {
                 let mut membership = stream::Membership::connect(addr, shard_id).await.unwrap();
                 loop {
-                    membership.consume(data.clone()).await.ok();
+                    membership.consume(nodes.clone()).await.ok();
                     tokio::time::sleep(Duration::from_secs(5)).await;
                 }
             }
         });
 
         tokio::spawn({
-            let data = data.clone();
+            let nodes = nodes.clone();
             async move {
                 loop {
-                    nodes::dispatch(data.clone(), shard_id);
+                    nodes::dispatch(nodes.clone(), shard_id);
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                }
+            }
+        });
+
+        tokio::spawn({
+            let nodes = nodes.clone();
+            let progress_log = progress_log.clone();
+            async move {
+                loop {
+                    progress_log::copy(nodes.clone(), progress_log.clone());
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }
         });
 
         Self {
-            nodes: data,
-            progress_log: Arc::new(RwLock::new(ProgressLog::new())),
+            nodes,
+            progress_log,
         }
     }
 

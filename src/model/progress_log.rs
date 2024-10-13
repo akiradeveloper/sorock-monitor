@@ -21,3 +21,15 @@ impl ProgressLog {
         Self { log }
     }
 }
+
+pub fn copy(nodes: Arc<RwLock<Nodes>>, progress_log: Arc<RwLock<ProgressLog>>) {
+    let nodes = nodes.read();
+    let mut progress_log = progress_log.write();
+    let max_value = nodes
+        .nodes
+        .values()
+        .map(|node_state| node_state.log_state.commit_index)
+        .max()
+        .unwrap_or(0);
+    progress_log.log.insert(Instant::now(), max_value);
+}
