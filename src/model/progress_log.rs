@@ -10,17 +10,14 @@ impl ProgressLog {
         }
     }
     pub fn get_range(&self, start: Instant, end: Instant) -> BTreeMap<Instant, u64> {
-        self.log
-            .range(start..end)
-            .map(|(k, v)| (k.clone(), *v))
-            .collect()
+        self.log.range(start..=end).map(|(&k, &v)| (k, v)).collect()
     }
     pub fn test() -> Self {
-        let mut out = BTreeMap::new();
+        let mut log = BTreeMap::new();
         let now = Instant::now();
         for i in 0..100000 {
-            out.insert(now + Duration::from_secs(i), i * i);
+            log.insert(now + Duration::from_secs(i), i * i);
         }
-        Self { log: out }
+        Self { log }
     }
 }

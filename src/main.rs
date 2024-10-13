@@ -10,7 +10,7 @@ use ratatui::widgets::{Block, Gauge};
 use ratatui::{
     crossterm::event::{self, KeyCode, KeyEventKind},
     symbols::Marker,
-    widgets::{Axis, Borders, Chart, Dataset, StatefulWidget, Widget},
+    widgets::{Axis, Borders, Chart, Dataset, GraphType, Padding, StatefulWidget, Widget},
     DefaultTerminal,
 };
 use std::time::{Duration, Instant};
@@ -121,8 +121,8 @@ impl StatefulWidget for &App {
         };
         Widget::render(progress_chart, chunks[0], buf);
 
-        let nodes = {
-            let mut out = vec![];
+        let nodes_list = {
+            let mut nodes = vec![];
             let reader = &self.model.nodes.read();
 
             let min_index = reader
@@ -140,7 +140,7 @@ impl StatefulWidget for &App {
 
             for (uri, node_state) in &reader.nodes {
                 let log_state = &node_state.log_state;
-                out.push(ui::node_list::Node {
+                nodes.push(ui::node_list::Node {
                     name: uri.to_string(),
                     head_index: log_state.head_index,
                     snapshot_index: log_state.snapshot_index,
@@ -153,11 +153,10 @@ impl StatefulWidget for &App {
                     },
                 });
             }
-            out.sort_by_key(|node| node.commit_index);
-            out.reverse();
-            out
+            nodes.sort_by_key(|node| node.commit_index);
+            nodes.reverse();
+            ui::node_list::NodeList::new(nodes)
         };
-        let nodes_list = ui::node_list::NodeList::new(nodes);
         StatefulWidget::render(nodes_list, chunks[1], buf, &mut state.list_state);
     }
 }

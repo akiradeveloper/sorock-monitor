@@ -1,5 +1,3 @@
-use ratatui::widgets::Dataset;
-
 use super::*;
 
 pub struct ProgressChart {
@@ -21,6 +19,9 @@ impl Widget for ProgressChart {
     where
         Self: Sized,
     {
+        let lo_v = *self.data.values().min().unwrap_or(&0);
+        let hi_v = *self.data.values().max().unwrap_or(&0);
+
         let dataseq: Vec<(f64, f64)> = {
             let mut out = vec![];
             for (&t, &v) in &self.data {
@@ -33,6 +34,7 @@ impl Widget for ProgressChart {
         let dataset = Dataset::default()
             .marker(Marker::Braille)
             .style(Style::default().fg(Color::Yellow))
+            .graph_type(GraphType::Line)
             .data(&dataseq);
 
         let x_axis = {
@@ -42,10 +44,13 @@ impl Widget for ProgressChart {
                 .style(Style::default().fg(Color::Gray))
                 .title("Time")
                 .bounds([lo as f64, hi as f64])
+                .labels(["-60s", "0s"])
         };
         let y_axis = Axis::default()
             .style(Style::default().fg(Color::Gray))
-            .title("Commit Index");
+            .title("Commit Index")
+            .bounds([lo_v as f64, hi_v as f64])
+            .labels([lo_v.to_string(), hi_v.to_string()]);
         Chart::new(vec![dataset])
             .block(
                 Block::default()
