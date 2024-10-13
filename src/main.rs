@@ -10,7 +10,7 @@ use ratatui::widgets::{Block, Gauge};
 use ratatui::{
     crossterm::event::{self, KeyCode, KeyEventKind},
     symbols::Marker,
-    widgets::{Borders, Chart, Dataset, StatefulWidget, Widget},
+    widgets::{Axis, Borders, Chart, Dataset, StatefulWidget, Widget},
     DefaultTerminal,
 };
 use std::time::{Duration, Instant};
@@ -110,8 +110,16 @@ impl StatefulWidget for &App {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(1)
-            .constraints([Constraint::Length(8), Constraint::Min(0)].as_ref())
+            .constraints([Constraint::Length(15), Constraint::Min(0)].as_ref())
             .split(area);
+
+        let progress_chart = {
+            let end = Instant::now();
+            let start = end - Duration::from_secs(60);
+            let data = self.model.progress_log.read().get_range(start, end);
+            ui::progress_chart::ProgressChart::new(data, start, end)
+        };
+        Widget::render(progress_chart, chunks[0], buf);
 
         let nodes = {
             let mut out = vec![];
