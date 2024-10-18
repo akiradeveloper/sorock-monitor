@@ -75,11 +75,11 @@ impl Nodes {
             Uri::from_static("http://manko:3000"),
             NodeState {
                 log_state: model::LogState {
-                    head_index: 80,
-                    snapshot_index: 130,
-                    app_index: 135,
+                    head_index: 168,
+                    snapshot_index: 168,
+                    app_index: 168,
                     commit_index: 168,
-                    last_index: 174,
+                    last_index: 168,
                 },
                 drop_log_metrics_stream: None,
             },
