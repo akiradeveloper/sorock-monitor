@@ -146,10 +146,11 @@ impl StatefulWidget for NodeList {
             let selected = ctx.is_selected;
             let idx = ctx.index;
             let mut node = self.nodes[idx].clone();
+            let name  = format!("{} [{}/{}]", node.name, node.app_index, node.commit_index);
             node.name = if selected {
-                format!("> {}", node.name)
+                format!("> {}", name)
             } else {
-                node.name
+                name
             };
             (node, 3)
         });
