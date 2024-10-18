@@ -67,7 +67,7 @@ impl Widget for ProgressChart {
             .style(Style::default().fg(Color::Gray))
             .title("Commit/Sec")
             .bounds([0., hi_v])
-            .labels(["0".to_string(), hi_v.to_string()]);
+            .labels(["0".to_string(), format!("{hi_v:.2}")]);
         Chart::new(vec![dataset])
             .block(
                 Block::default()
