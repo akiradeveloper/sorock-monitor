@@ -110,7 +110,7 @@ impl StatefulWidget for &App {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(1)
-            .constraints([Constraint::Length(15), Constraint::Min(0)].as_ref())
+            .constraints([Constraint::Length(15), Constraint::Fill(1)].as_ref())
             .split(area);
 
         let progress_chart = {
