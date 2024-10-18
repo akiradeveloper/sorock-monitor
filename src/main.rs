@@ -153,8 +153,7 @@ impl StatefulWidget for &App {
                     },
                 });
             }
-            nodes.sort_by_key(|node| node.commit_index);
-            nodes.reverse();
+            nodes.sort_by_key(|node| node.name.clone());
             ui::node_list::NodeList::new(nodes)
         };
         StatefulWidget::render(nodes_list, chunks[1], buf, &mut state.list_state);
