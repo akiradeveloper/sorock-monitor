@@ -15,10 +15,14 @@ use ratatui::{
 };
 use std::time::{Duration, Instant};
 use tonic::transport::{Channel, Endpoint, Uri};
+use std::pin::Pin;
+use futures::Stream;
+use futures::StreamExt;
 
 mod mock;
 mod model;
 mod ui;
+mod real;
 
 mod proto {
     tonic::include_proto!("sorock_monitor");
@@ -43,11 +47,14 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     let model = match args.sub {
-        Sub::Connect { addr, shard_id } => model::Model::connect(addr, shard_id),
+        Sub::Connect { addr, shard_id } => {
+            let node = real::connect_real_node(addr, shard_id);
+            model::Model::new(node)
+        },
         Sub::Test { number: 0 } => model::Model::test(),
         Sub::Test { number: 1 } => {
-            let (url, shard_id) = mock::launch_mock_server();
-            model::Model::connect(url, shard_id)
+            let mock = mock::connect_mock_node();
+            model::Model::new(mock)
         }
         _ => unreachable!(),
     };

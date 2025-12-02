@@ -88,18 +88,19 @@ impl Nodes {
     }
 }
 
-pub fn dispatch(data: Arc<RwLock<Nodes>>, shard_id: u32) {
-    let mut nodes = data.write();
-    for (uri, state) in &mut nodes.nodes {
+/// Start data fetching for each node.
+pub fn copy(node: Arc<dyn stream::Node>, nodes: Arc<RwLock<Nodes>>) {
+    let mut data = nodes.write();
+    for (url, state) in &mut data.nodes {
         if state.drop_log_metrics_stream.is_none() {
             let hdl = tokio::spawn({
-                let uri = uri.clone();
-                let data = data.clone();
+                let url = url.clone();
+                let node = node.clone();
+                let data = nodes.clone();
                 async move {
-                    let mut stream = stream::LogMetrics::connect(uri, shard_id);
-                    loop {
-                        stream.consume(data.clone()).await.unwrap();
-                    }
+                    stream::CopyLogMetrics {
+                        url: url.clone(),
+                    }.copy(node.watch_log_metrics(url), data).await;
                 }
             })
             .abort_handle();

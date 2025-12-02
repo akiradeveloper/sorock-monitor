@@ -2,7 +2,7 @@ use super::*;
 
 mod nodes;
 mod progress_log;
-mod stream;
+pub mod stream;
 pub use nodes::*;
 pub use progress_log::*;
 
@@ -11,26 +11,25 @@ pub struct Model {
     pub progress_log: Arc<RwLock<ProgressLog>>,
 }
 impl Model {
-    pub fn connect(addr: Uri, shard_id: u32) -> Self {
+    pub async fn new(node: impl stream::Node + 'static) -> Self {
+        let node = Arc::new(node);
         let nodes = Arc::new(RwLock::new(Nodes::default()));
         let progress_log = Arc::new(RwLock::new(ProgressLog::new()));
 
         tokio::spawn({
+            let node = node.watch_membership();
             let nodes = nodes.clone();
             async move {
-                let mut membership = stream::Membership::connect(addr, shard_id).await.unwrap();
-                loop {
-                    membership.consume(nodes.clone()).await.ok();
-                    tokio::time::sleep(Duration::from_secs(5)).await;
-                }
+                stream::CopyMembership::copy(node, nodes).await;
             }
         });
 
         tokio::spawn({
+            let node = node.clone();
             let nodes = nodes.clone();
             async move {
                 loop {
-                    nodes::dispatch(nodes.clone(), shard_id);
+                    nodes::copy(node.clone(), nodes.clone());
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }

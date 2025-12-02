@@ -1,46 +1,41 @@
+use super::*;
+
 use futures::stream::Stream;
 use std::time::Instant;
 use std::{pin::Pin, time::Duration};
 use tonic::transport::{Server, Uri};
 
-mod proto {
-    tonic::include_proto!("sorock_monitor");
-}
-use proto::*;
-
-pub struct App {
-    url: Uri,
+pub struct MockNode {
     start_time: Instant,
 }
-impl App {
-    pub fn new(url: Uri) -> Self {
+impl MockNode {
+    pub fn new() -> Self {
         Self {
-            url,
             start_time: Instant::now(),
         }
     }
 }
-#[tonic::async_trait]
-impl proto::monitor_server::Monitor for App {
-    async fn get_membership(
+
+impl model::stream::Node for MockNode {
+    fn watch_membership(
         &self,
-        _: tonic::Request<Shard>,
-    ) -> std::result::Result<tonic::Response<Membership>, tonic::Status> {
-        let out = Membership {
-            members: vec![self.url.clone().to_string()],
+    ) -> Pin<Box<dyn Stream<Item = proto::Membership> + Send>> {
+        let out = proto::Membership {
+            members: vec![
+                "http://n1:4000".to_string(),
+                "http://n2:4000".to_string(),
+                "http://n3:4000".to_string(),
+           ],
         };
-        Ok(tonic::Response::new(out))
+        Box::pin(futures::stream::once(async move { out }))
     }
 
-    type GetLogMetricsStream =
-        Pin<Box<dyn Stream<Item = Result<LogMetrics, tonic::Status>> + Send>>;
-
-    async fn get_log_metrics(
+    fn watch_log_metrics(
         &self,
-        _: tonic::Request<Shard>,
-    ) -> std::result::Result<tonic::Response<Self::GetLogMetricsStream>, tonic::Status> {
+        _: Uri
+    ) -> Pin<Box<dyn Stream<Item = proto::LogMetrics> + Send>> {
         let start_time = self.start_time;
-        let st = async_stream::try_stream! {
+        let st = async_stream::stream! {
             loop {
                 tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 let x = Instant::now().duration_since(start_time).as_secs();
@@ -51,7 +46,7 @@ impl proto::monitor_server::Monitor for App {
                     let b = f64::log(10.0, x as f64);
                     (a * b) as u64
                 };
-                let metrics = LogMetrics {
+                let metrics = proto::LogMetrics {
                     head_index: f(x),
                     snap_index: f(x+1),
                     app_index: f(x+2),
@@ -61,24 +56,11 @@ impl proto::monitor_server::Monitor for App {
                 yield metrics
             }
         };
-        Ok(tonic::Response::new(Box::pin(st)))
+        Box::pin(st)
     }
 }
 
-pub fn launch_mock_server() -> (Uri, u32) {
-    let addr: Uri = "http://localhost:50051".parse().unwrap();
-    tokio::spawn({
-        let addr = addr.clone();
-        async move {
-            let app = App::new(addr);
-            let sock = "0.0.0.0:50051".parse().unwrap();
-            Server::builder()
-                .add_service(proto::monitor_server::MonitorServer::new(app))
-                .serve(sock)
-                .await
-                .unwrap();
-        }
-    });
-    std::thread::sleep(Duration::from_secs(1));
-    (addr, 0)
+pub fn connect_mock_node() -> impl model::stream::Node {
+    let app = MockNode::new();
+    app
 }
