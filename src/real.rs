@@ -15,19 +15,30 @@ struct RemoteNode {
     shard_id: u32,
 }
 
+#[async_trait::async_trait]
 impl model::stream::Node for RemoteNode {
-    fn watch_membership(
+    async fn watch_membership(
         &self,
     ) -> Pin<Box<dyn Stream<Item = proto::Membership> + Send>> {
         let shard = proto::Shard { id: self.shard_id };
-        self.client.get_membership(shard).await;
+        let mut client = self.client.clone();
+        let st = async_stream::stream! {
+            loop {
+                let membership = client.get_membership(shard).await.unwrap().into_inner();
+                yield membership
+            }
+        };
+        Box::pin(st)
     }
 
-    fn watch_log_metrics(
+    async fn watch_log_metrics(
         &self,
         _: Uri
     ) -> Pin<Box<dyn Stream<Item = proto::LogMetrics> + Send>> {
         let shard = proto::Shard { id: self.shard_id };
-        self.client.get_log_metrics(shard).await;
+        let mut client = self.client.clone();
+        let st = client.get_log_metrics(shard).await.unwrap().into_inner();
+        let st = st.map(|x| x.unwrap());
+        Box::pin(st)
     }
 }

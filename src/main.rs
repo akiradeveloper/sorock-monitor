@@ -17,7 +17,7 @@ use std::time::{Duration, Instant};
 use tonic::transport::{Channel, Endpoint, Uri};
 use std::pin::Pin;
 use futures::Stream;
-use futures::StreamExt;
+use futures::{TryFutureExt, StreamExt};
 
 mod mock;
 mod model;
@@ -49,12 +49,12 @@ async fn main() -> Result<()> {
     let model = match args.sub {
         Sub::Connect { addr, shard_id } => {
             let node = real::connect_real_node(addr, shard_id);
-            model::Model::new(node)
+            model::Model::new(node).await
         },
         Sub::Test { number: 0 } => model::Model::test(),
         Sub::Test { number: 1 } => {
             let mock = mock::connect_mock_node();
-            model::Model::new(mock)
+            model::Model::new(mock).await
         }
         _ => unreachable!(),
     };

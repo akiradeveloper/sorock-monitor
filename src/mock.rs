@@ -16,8 +16,9 @@ impl MockNode {
     }
 }
 
+#[async_trait::async_trait]
 impl model::stream::Node for MockNode {
-    fn watch_membership(
+    async fn watch_membership(
         &self,
     ) -> Pin<Box<dyn Stream<Item = proto::Membership> + Send>> {
         let out = proto::Membership {
@@ -30,7 +31,7 @@ impl model::stream::Node for MockNode {
         Box::pin(futures::stream::once(async move { out }))
     }
 
-    fn watch_log_metrics(
+    async fn watch_log_metrics(
         &self,
         _: Uri
     ) -> Pin<Box<dyn Stream<Item = proto::LogMetrics> + Send>> {

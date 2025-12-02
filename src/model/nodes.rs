@@ -100,7 +100,7 @@ pub fn copy(node: Arc<dyn stream::Node>, nodes: Arc<RwLock<Nodes>>) {
                 async move {
                     stream::CopyLogMetrics {
                         url: url.clone(),
-                    }.copy(node.watch_log_metrics(url), data).await;
+                    }.copy(node.watch_log_metrics(url).await, data).await;
                 }
             })
             .abort_handle();

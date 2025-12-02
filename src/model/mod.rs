@@ -17,7 +17,7 @@ impl Model {
         let progress_log = Arc::new(RwLock::new(ProgressLog::new()));
 
         tokio::spawn({
-            let node = node.watch_membership();
+            let node = node.watch_membership().await;
             let nodes = nodes.clone();
             async move {
                 stream::CopyMembership::copy(node, nodes).await;
